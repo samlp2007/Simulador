@@ -1,3 +1,13 @@
+"""
+logica_simulador.py
+=====================
+Toda la lógica "pura" del proyecto: cargar datos, limpiarlos, cruzarlos
+y calcular indicadores. NO tiene ningún input()/print() de consola ni
+nada de Streamlit — así lo puede usar tanto simulador.py (consola)
+como app.py (versión web), sin duplicar código ni arriesgarse a que
+den resultados distintos.
+"""
+
 import math
 import pandas as pd
 from pathlib import Path
@@ -42,7 +52,11 @@ def preparar_base_fuente1() -> pd.DataFrame:
 
 
 def preparar_base_fuente2() -> pd.DataFrame:
-
+    """
+    Dataset 3 (reporte por UGEL). Solo se usan las filas de colegio
+    individual (n_ie == 1) — lo único garantizado sin ambigüedad en
+    este archivo, evitando contar dos veces los subtotales.
+    """
     df = pd.read_csv(CARPETA / "Dataset_3_prueba_.csv", sep=";", encoding="latin-1")
     df.columns = [c.strip() for c in df.columns]
     df = df.rename(columns={
@@ -100,7 +114,11 @@ def calcular_indicadores(df_filtrado: pd.DataFrame) -> dict:
 
 
 def simular(ind_base: dict, nuevos_estudiantes: float, nuevos_docentes: float) -> dict:
-
+    """
+    Recalcula los indicadores asumiendo un nuevo total de estudiantes y
+    docentes (usa el 'estandar_efectivo' ya calculado en ind_base, que
+    representa el ratio ideal de la selección actual).
+    """
     nuevos_estudiantes = round(nuevos_estudiantes)
     nuevos_docentes = round(nuevos_docentes)
 
@@ -115,6 +133,10 @@ def simular(ind_base: dict, nuevos_estudiantes: float, nuevos_docentes: float) -
         "deficit_docente": docentes_necesarios_sim - nuevos_docentes,
     }
 
+
+# ------------------------------------------------------------------
+# Datasets externos (subidos por cualquier visitante de la app web)
+# ------------------------------------------------------------------
 
 def leer_csv_desde_bytes(contenido: bytes):
     """
@@ -155,7 +177,17 @@ def leer_csv_desde_bytes(contenido: bytes):
 
 def preparar_base_personalizada(df: pd.DataFrame, mapeo: dict, estandar_docente: float):
     """
-   
+    Construye una base compatible con el resto del programa a partir de
+    un archivo externo, según el mapeo de columnas que indicó el usuario.
+
+    mapeo: dict con claves 'provincia', 'distrito', 'total_estudiantes',
+           'total_docentes' (obligatorias) y 'nivel', 'total_secciones'
+           (opcionales, pueden ser None), cuyos valores son los nombres
+           de columna reales en df.
+
+    Devuelve (base, reporte) — reporte incluye cuántas filas se
+    descartaron por tener datos no numéricos, para avisarle al usuario.
+    """
     columnas_nuevas = {}
     for clave in ["provincia", "distrito", "total_estudiantes", "total_docentes", "nivel", "total_secciones"]:
         col_origen = mapeo.get(clave)
