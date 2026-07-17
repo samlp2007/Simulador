@@ -1,16 +1,3 @@
-"""
-app.py
-=======
-SIMULADOR DE COBERTURA EDUCATIVA — Región Junín (versión web, Streamlit)
-
-Corre localmente con:
-    streamlit run app.py
-
-Usa exactamente la misma lógica que simulador.py (importada desde
-logica_simulador.py), solo que con controles web en vez de texto en
-consola.
-"""
-
 import streamlit as st
 import pandas as pd
 
@@ -26,9 +13,6 @@ st.set_page_config(
 )
 
 
-# ------------------------------------------------------------------
-# Carga de datos (con caché: no se vuelve a leer el CSV en cada clic)
-# ------------------------------------------------------------------
 
 @st.cache_data
 def cargar_fuente1() -> pd.DataFrame:
@@ -41,11 +25,7 @@ def cargar_fuente2() -> pd.DataFrame:
 
 
 def asistente_dataset_personalizado():
-    """
-    Muestra el flujo de subir un CSV externo y mapear sus columnas.
-    Devuelve (base, etiqueta_zona, criterio_deficit) si el usuario ya
-    completó el mapeo correctamente, o None si todavía falta algo.
-    """
+
     st.markdown("**Sube tu archivo CSV**")
     archivo = st.file_uploader("Archivo CSV", type=["csv"], label_visibility="collapsed")
 
@@ -122,9 +102,7 @@ def asistente_dataset_personalizado():
     return base, "Distrito/Zona", criterio_deficit
 
 
-# ------------------------------------------------------------------
-# Encabezado
-# ------------------------------------------------------------------
+
 
 st.title("Simulador de Cobertura Educativa — Junín 2024")
 st.caption(
@@ -132,9 +110,7 @@ st.caption(
     "Luego simula escenarios de aumento de matrícula o incorporación de docentes."
 )
 
-# ------------------------------------------------------------------
-# Barra lateral: fuente de datos y filtros
-# ------------------------------------------------------------------
+
 
 with st.sidebar:
     st.header("Filtros")
@@ -189,10 +165,7 @@ with st.sidebar:
             "(ver limitación explicada en el informe)."
         )
 
-# ------------------------------------------------------------------
-# Referencia regional (para poder interpretar cualquier zona, elegida
-# específicamente o en el ranking general, contra el mismo promedio)
-# ------------------------------------------------------------------
+
 
 promedio_regional = calcular_indicadores(base)["estudiantes_por_docente"]
 
@@ -220,9 +193,7 @@ ranking_completo["Urgencia"] = ranking_completo["estudiantes_por_docente"].apply
 ranking_completo = ranking_completo.sort_values("estudiantes_por_docente", ascending=False).reset_index(drop=True)
 ranking_completo["Posición"] = ranking_completo.index + 1
 
-# ------------------------------------------------------------------
-# Filtrado y cálculo de indicadores
-# ------------------------------------------------------------------
+
 
 df_filtrado = filtrar(base, provincia, distrito, nivel)
 
@@ -237,10 +208,7 @@ if "nivel" in base.columns:
     partes_titulo.append(nivel or "Todos los niveles")
 st.subheader(" / ".join(partes_titulo))
 
-# ------------------------------------------------------------------
-# Veredicto de la zona elegida (le da sentido real a elegir un filtro
-# específico, en vez de solo mostrar números sueltos)
-# ------------------------------------------------------------------
+
 
 emoji, etiqueta_urgencia = _clasificar_urgencia(ind["estudiantes_por_docente"])
 diferencia_pct = round((ind["estudiantes_por_docente"] / promedio_regional - 1) * 100, 1)
@@ -269,9 +237,7 @@ elif emoji == "🟡":
 else:
     st.success(mensaje_veredicto)
 
-# ------------------------------------------------------------------
-# Indicadores actuales (tarjetas)
-# ------------------------------------------------------------------
+
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Instituciones educativas", ind["colegios"])
@@ -311,14 +277,7 @@ col7.metric(
 
 st.divider()
 
-# ------------------------------------------------------------------
-# 🚨 Ranking de urgencia: ¿dónde se necesitan más docentes?
-# ------------------------------------------------------------------
-# Se usa "estudiantes por docente" (no el déficit contra el estándar)
-# porque el estándar de aula sobreestima el superávit en secundaria
-# (ver FAQ). El ranking compara cada zona contra el promedio regional
-# de la fuente elegida — un criterio siempre disponible y sin
-# supuestos externos.
+
 
 st.subheader("Ranking de urgencia: ¿dónde se necesitan más docentes?")
 st.caption(
